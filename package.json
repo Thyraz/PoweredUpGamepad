@@ -1,0 +1,17 @@
+{
+  "name": "gamecontroller",
+  "version": "1.0.0",
+  "description": "Example for Node-PoweredUP and Gamepad API",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "eslint": "^7.20.0",
+    "express": "^4.17.1",
+    "node-poweredup": "^6.9.1",
+    "open": "^7.4.2"
+  }
+}

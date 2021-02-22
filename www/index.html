@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Gamepad API</title>
+        <meta name="viewport" content="width=device-width">
+        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+    </head>
+    <body>
+ 
+    <div id="status"></div>
+
+    <script>
+    let gamepadID = 1;
+    let connected = false;
+    let connectTimer;
+    let loopTimer;
+    let lastButtonStates;
+    let lastAxesValues;
+ 
+    $(document).ready(() => { 
+        let connectionPrompt = 'Connect gamepad and press a button.';
+        $('#status').text(connectionPrompt);
+
+        $(window).on('gamepaddisconnected', () => {
+            $('#status').text(connectionPrompt);
+            window.clearInterval(loopTimer);
+        });
+
+        // Fix for missing 'gamepadconnected' calls in Chrome
+        connectTimer = window.setInterval(() => {
+            if(navigator.getGamepads()[gamepadID]) {
+                if(!connected) {
+                    connected = true;
+                    send('connected');
+                    $('#status').html('Connected.');
+                    loopTimer = window.setInterval(refreshData, 50);
+                } 
+                window.clearInterval(connectTimer);
+            }
+        }, 500);
+ 
+    });
+
+    function refreshData() {
+        const pad = navigator.getGamepads()[gamepadID];
+        if (pad) {
+            if (lastButtonStates) {
+                for (let i = 0; i < pad.buttons.length; i++) {
+                    if (pad.buttons[i].pressed != lastButtonStates[i].pressed) {
+                        let endpoint = (pad.buttons[i].pressed) ? 'pressed' : 'released'
+                        let json = JSON.stringify({
+                            button: i
+                        })
+                        send(endpoint, json);
+                    }
+                }
+            }
+            lastButtonStates = pad.buttons;
+
+            if (lastAxesValues) {
+                for (let i = 0; i < pad.axes.length; i++) {
+                    let value = Math.round(pad.axes[i] * 100)
+                    if (value != Math.round(lastAxesValues[i] * 100)) {
+                        let json = JSON.stringify({
+                            axe: i,
+                            value
+                        })
+                        send('moved', json);
+                    }
+                }
+            }
+            lastAxesValues = pad.axes;
+        }
+
+        updateHtml();
+    }
+
+    function updateHtml() {
+        const pad = navigator.getGamepads()[gamepadID];
+        let html = '';
+        html += 'id: ' + pad.id + '<br/>';
+
+        for(let i = 0; i < pad.buttons.length; i++) {
+            html += 'Button ' + (i + 1) + ': ';
+            if (pad.buttons[i].pressed) html += ' pressed';
+            html += '<br/>';
+        }
+
+        for(let i = 0; i < pad.axes.length; i += 2) {
+            html += 'Analogue Stick ' + (Math.ceil(i / 2) + 1) + ': ' + Math.round(pad.axes[i] * 100) + ',' + Math.round(pad.axes[i + 1] * 100) + '<br/>';
+        }
+
+        $('#status').html(html);
+    }
+
+    function send(endpoint, json) {
+        fetch('./api/' + endpoint + '/', {
+            method: 'post',
+            headers: {'Content-Type' : 'application/json'},
+            body: json
+        })
+        .catch(function (error) {
+            console.log('Request failed for endpoint ' + endpoint + ' with value ' + value + ': ', error);
+        });
+    }
+
+    </script>
+    </body>
+</html>
