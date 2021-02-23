@@ -34,7 +34,7 @@
                     connected = true;
                     send('connected');
                     $('#status').html('Connected.');
-                    loopTimer = window.setInterval(refreshData, 50);
+                    loopTimer = window.setInterval(refreshData, 20);
                 } 
                 window.clearInterval(connectTimer);
             }
